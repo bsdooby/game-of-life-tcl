@@ -90,6 +90,7 @@ for {set i 0} {$i < $gridSpace} {incr i} {
     for {set j 0} {$j < $gridSpace} {incr j} {
         lset frameList $i end+1 [ttk::frame .cell-$i-$j -width $cellSize -height $cellSize -style Dead.TFrame]
         
+        # alternative approach to draw the Ui
         #ttk::frame .cell-$i-$j -padding 5 -relief sunken -width 10 -height 10 
         #grid .cell-$i-$j -row $i -column $j
     }
@@ -108,6 +109,7 @@ if 1 {
     }
 }
 
+# the game loop
 while {1} {
     foreach l $frameList {
         foreach c $l {
