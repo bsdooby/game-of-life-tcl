@@ -2,44 +2,87 @@
 
 package require Tk
 
+set cellSize 10
+set gridSpace 50
+
+wm title . "Game of Life"
+
 proc moore {cell} {
-  
+    #set ne nonewline
+    
+    global gridSpace
+    
     lassign [split $cell -] _ x y
-    puts "{$x $y} ->"
+    
+    set neighbours [list]
 
-    set ne nonewline
+    # center cell
+    .cell-$x-$y configure -style Center.TFrame
+    #update
 
-    # north
-    puts -$ne "{[expr $x-1] [expr $y+0]}"
+    if 1 {
+        # north
+        #puts -$ne "{[expr $x-1] [expr $y+0]}"
+        set x_ [expr $x-1]
+        set x_ [expr $x_ < 0 ? $gridSpace-1 : $x_]
+        lappend neighbours .cell-$x_-$y
 
-    # northeast
-    puts -$ne "{[expr $x-1] [expr $y+1]}"
-    
-    # east
-    puts -$ne "{[expr $x-0] [expr $y+1]}"
+        # northeast
+        #puts -$ne "{[expr $x-1] [expr $y+1]}"
+        set y_ [expr $y+1]
+        set y_ [expr $y_ > $gridSpace-1 ? 0 : $y_]
+        lappend neighbours .cell-$x_-$y_
+        
+        # east
+        #puts -$ne "{[expr $x-0] [expr $y+1]}"
+        lappend neighbours .cell-$x-$y_
+        
+        # southeast
+        #puts -$ne "{[expr $x+1] [expr $y+1]}"
+        set x_ [expr $x+1]
+        set x_ [expr $x_ > $gridSpace-1 ? 0 : $x_]
+        lappend neighbours .cell-$x_-$y_
+        
+        # south
+        #puts -$ne "{[expr $x+1] [expr $y+0]}"
+        lappend neighbours .cell-$x_-$y
+        
+        # southwest
+        #puts -$ne "{[expr $x+1] [expr $y-1]}"
+        set y_ [expr $y-1]
+        set y_ [expr $y_ < 0 ? $gridSpace-1 : $y_]
+        lappend neighbours .cell-$x_-$y_
+        
+        # west
+        #puts -$ne "{[expr $x-0] [expr $y-1]}"
+        lappend neighbours .cell-$x-$y_
 
-    # southeast
-    puts -$ne "{[expr $x+1] [expr $y+1]}"
-    
-    # south
-    puts -$ne "{[expr $x+1] [expr $y+0]}"
-    
-    # southwest
-    puts -$ne "{[expr $x+1] [expr $y-1]}"
-    
-    # west
-    puts -$ne "{[expr $x-0] [expr $y-1]}"
-    
-    # northwest
-    puts "{[expr $x-1] [expr $y-1]}"
+        # northwest
+        #puts "{[expr $x-1] [expr $y-1]}"
+        set x_ [expr $x-1]
+        set x_ [expr $x_ < 0 ? $gridSpace-1 : $x_]
+        lappend neighbours .cell-$x_-$y_
+        
+        foreach nc $neighbours {
+            $nc configure -style Neighbour.TFrame
+        }
+        update
+
+        after 10 
+
+        foreach nc $neighbours {
+            $nc configure -style Dead.TFrame
+        }
+    }
+    .cell-$x-$y configure -style Dead.TFrame
+    update
 }
 
 ttk::style configure Dead.TFrame -background white -borderwidth 0.5 -relief sunken
 ttk::style configure Alive.TFrame -background black -borderwidth 0.5 -relief sunken
-ttk::style configure Moore.TFrame -background blue -borderwidth 0.5 -relief sunken
 
-set cellSize 5
-set gridSpace 50
+ttk::style configure Neighbour.TFrame -background red -borderwidth 0.5 -relief sunken
+ttk::style configure Center.TFrame -background green -borderwidth 0.5 -relief sunken
 
 set frameList [list]
 for {set i 0} {$i < $gridSpace} {incr i} {
@@ -52,8 +95,7 @@ for {set i 0} {$i < $gridSpace} {incr i} {
     }
 }
 
-
-if 0 {
+if 1 {
     set i 0
     set j 0
     foreach l $frameList {
@@ -66,12 +108,11 @@ if 0 {
     }
 }
 
-foreach l $frameList {
-    foreach c $l {
-        moore $c
+while {1} {
+    foreach l $frameList {
+        foreach c $l {
+            moore $c
+        }
     }
 }
-
-#set cell [lindex $frameList 0 3]]
-#$cell configure -style Alive.TFrame
 
