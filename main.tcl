@@ -3,11 +3,13 @@
 package require Tk
 
 set gridSize 50 
-set cellSize 10
+set cellSize 5
 set updateSpeed 1 
 
+set gridState 0
+
 #expr {srand(42)}
-set seed 180 
+set seed 350
 
 set generation 1
 
@@ -151,7 +153,7 @@ proc moore {cell} {
         # rule 3:
 	    # All other live cells die in the next generation. Similarly, all other dead cells stay dead.			
             
-        update
+        #update
     }
     #after $updateSpeed
     #.cell-$x-$y configure -style Dead.TFrame
@@ -160,23 +162,26 @@ proc moore {cell} {
 
 proc update_ {cell} {
 
-    global currentState nextState
+    global currentState nextState gridState
 
     lassign [split $cell -] _ x y
+    
     set currentState($x,$y) $nextState($x,$y)
     set nextState($x,$y) 0
 
     if {$currentState($x,$y) == 1} {
         .cell-$x-$y configure -style Alive.TFrame
+        #incr gridState
     } else {
         .cell-$x-$y configure -style Dead.TFrame
+        #incr gridState -1
     }
     update
 }
 
 proc main {} {
 
-    global seed gridSize frameList currentState generation
+    global seed gridSize frameList currentState generation gridState
 
     # seed cells
     for {set i 0} {$i < $seed} {incr i} {
@@ -185,9 +190,14 @@ proc main {} {
         set currentState($x,$y) 1 
     }
 
+    # test cases
     #set currentState(14,4) 1
-    #set currentState(15,4) 1
-    #set currentState(16,4) 1
+    #set currentState(15,5) 1
+    #set currentState(16,6) 1
+
+    #set currentState(14,6) 1
+    #set currentState(15,5) 1
+    #set currentState(16,5) 1
 
     # init cell states
     if {1} {
@@ -235,6 +245,8 @@ proc main {} {
                 update_ $c
             }
         }
+
+        #puts "state: $gridState"
     }
 }
 
