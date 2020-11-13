@@ -8,8 +8,8 @@ set updateSpeed 1
 
 set gridState 0
 
-#expr {srand(42)}
-set seed 350
+expr {srand(42)}
+set seed 450
 
 set generation 1
 
