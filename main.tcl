@@ -2,14 +2,13 @@
 
 package require Tk
 
-set gridSize 20
-set cellSize 5
-set updateSpeed 0
+set gridSize 60 
+set cellSize 5 
 
 set gridState 0
 
 #expr {srand(42)}
-set seed 50
+set seed 450
 
 set generation 1
 
@@ -46,7 +45,7 @@ proc moore {cell} {
  
     #set ne nonewline
     
-    global gridSize updateSpeed frameList currentState nextState
+    global gridSize frameList currentState nextState
     
     lassign [split $cell -] _ x y
     
@@ -62,52 +61,66 @@ proc moore {cell} {
         #puts -$ne "{[expr $x-1] [expr $y+0]}"
         set x_ [expr $x-1]
         set x_ [expr $x_ < 0 ? $gridSize-1 : $x_]
-        lappend neighbours .cell-$x_-$y
+        #lappend neighbours .cell-$x_-$y
+        set livingNeighbours $currentState($x_,$y)
 
         # northeast
         #puts -$ne "{[expr $x-1] [expr $y+1]}"
         set y_ [expr $y+1]
         set y_ [expr $y_ > $gridSize-1 ? 0 : $y_]
-        lappend neighbours .cell-$x_-$y_
+        #lappend neighbours .cell-$x_-$y_
+        set livingNeighbours [expr $livingNeighbours + $currentState($x_,$y_)]
         
         # east
         #puts -$ne "{[expr $x-0] [expr $y+1]}"
-        lappend neighbours .cell-$x-$y_
+        #lappend neighbours .cell-$x-$y_
+        set livingNeighbours [expr $livingNeighbours + $currentState($x,$y_)]
         
         # southeast
         #puts -$ne "{[expr $x+1] [expr $y+1]}"
         set x_ [expr $x+1]
         set x_ [expr $x_ > $gridSize-1 ? 0 : $x_]
-        lappend neighbours .cell-$x_-$y_
+        #lappend neighbours .cell-$x_-$y_
+        set livingNeighbours [expr $livingNeighbours + $currentState($x_,$y_)]
         
         # south
         #puts -$ne "{[expr $x+1] [expr $y+0]}"
-        lappend neighbours .cell-$x_-$y
+        #lappend neighbours .cell-$x_-$y
+        set livingNeighbours [expr $livingNeighbours + $currentState($x_,$y)]
         
         # southwest
         #puts -$ne "{[expr $x+1] [expr $y-1]}"
         set y_ [expr $y-1]
         set y_ [expr $y_ < 0 ? $gridSize-1 : $y_]
-        lappend neighbours .cell-$x_-$y_
+        #lappend neighbours .cell-$x_-$y_
+        set livingNeighbours [expr $livingNeighbours + $currentState($x_,$y_)]
         
         # west
         #puts -$ne "{[expr $x-0] [expr $y-1]}"
-        lappend neighbours .cell-$x-$y_
+        #lappend neighbours .cell-$x-$y_
+        set livingNeighbours [expr $livingNeighbours + $currentState($x,$y_)]
 
         # northwest
         #puts "{[expr $x-1] [expr $y-1]}"
         set x_ [expr $x-1]
         set x_ [expr $x_ < 0 ? $gridSize-1 : $x_]
-        lappend neighbours .cell-$x_-$y_
+        #lappend neighbours .cell-$x_-$y_
+        set livingNeighbours [expr $livingNeighbours + $currentState($x_,$y_)]
         
-        # count'em
-        foreach nc $neighbours {
-           
-            lassign [split $nc -] _ x_ y_
+        #puts "livingNeighbours: $livingNeighbours"
 
-            if {$currentState($x_,$y_) == 1} {
-                incr livingNeighbours
+        # count'em
+        if {0} {
+            set livingNeighbours 0
+            foreach nc $neighbours {
+           
+                lassign [split $nc -] _ x_ y_
+
+                if {$currentState($x_,$y_) == 1} {
+                    incr livingNeighbours
+                }
             }
+            #puts "livingNeighbours (loop): $livingNeighbours"
         }
 
         # show sliding window
@@ -115,14 +128,12 @@ proc moore {cell} {
             foreach nc $neighbours {
                 $nc configure -style Neighbour.TFrame
             }
-            update
-
-            after $updateSpeed
+            #update
 
             foreach nc $neighbours {
                 $nc configure -style Dead.TFrame
             }
-            update
+            #update
         }
 
         #puts "cell $x, $y: $cellArray($x,$y), $livingNeighbours"
@@ -158,9 +169,8 @@ proc moore {cell} {
             
         #update
     }
-    #after $updateSpeed
     #.cell-$x-$y configure -style Dead.TFrame
-    update
+    #update
 }
 
 proc update_ {cell} {
@@ -177,7 +187,7 @@ proc update_ {cell} {
     } else {
         .cell-$x-$y configure -style Dead.TFrame
     }
-    update
+    #update
 }
 
 proc main {} {
@@ -223,16 +233,17 @@ proc main {} {
     set currentState(8,5) 1
     set currentState(8,6) 1
 
-    # toad
-    set currentState(10,5) 1
-    set currentState(10,6) 1
-    set currentState(10,7) 1
-    set currentState(11,6) 1
-    set currentState(11,7) 1
-    set currentState(11,8) 1
+    if {0} {
+        set currentState(10,5) 1
+        set currentState(10,6) 1
+        set currentState(10,7) 1
+        set currentState(11,6) 1
+        set currentState(11,7) 1
+        set currentState(11,8) 1
+    }
 
     # set seed cells
-    if {1} {
+    if {0} {
         for {set i 0} {$i < $gridSize} {incr i} {
             for {set j 0} {$j < $gridSize} {incr j} {
                 set state $currentState($i,$j)
@@ -241,28 +252,53 @@ proc main {} {
                 } else {
                     .cell-$i-$j configure -style Dead.TFrame
                 }
-                update
+                #update
             }
         }
     }
+
+    after 1 [list eventLoop]
+    vwait forever
 
     # the game loop
-    while {1} {
-        foreach l $frameList {
-            foreach c $l {
-                moore $c
-            }
-        }
- 
-        wm title . "Game-of-Life: generation $generation"
-        incr generation
+    #while {1} {
+    #    foreach l $frameList {
+    #       foreach c $l {
+    #           moore $c
+    #        }
+    #    }
+    #
+    #    wm title . "Game-of-Life: generation $generation"
+    #    incr generation
+    #
+    #    foreach l $frameList {
+    #        foreach c $l {
+    #            update_ $c
+    #        }
+    #    }
+    #}
+}
 
-        foreach l $frameList {
-            foreach c $l {
-                update_ $c
-            }
+proc eventLoop {} {
+ 
+    global frameList generation
+
+    foreach l $frameList {
+        foreach c $l {
+            moore $c
         }
     }
+ 
+    wm title . "Game-of-Life: generation $generation"
+    incr generation
+
+    foreach l $frameList {
+        foreach c $l {
+            update_ $c
+        }
+    }
+
+    after 20 [list eventLoop]
 }
 
 # start
