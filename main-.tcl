@@ -2,12 +2,11 @@
 
 package require Tk
 
-set gridSize 70 
+set gridSize 100 
 set cellSize 5
-set updateSpeed 1
 
 #expr {srand(42)}
-set seed 1
+set seed 50
 
 set generation 1
 
@@ -114,7 +113,7 @@ proc moore {x y} {
                 #.grid itemconfigure "x:$x_;y:$y_" -fill green
                 .grid itemconfigure $cellCache($x_,$y_) -fill green
             }
-            update
+            #update
 
             after $updateSpeed
 
@@ -123,7 +122,7 @@ proc moore {x y} {
                 #.grid itemconfigure "x:$x_;y:$y_" -fill white
                 .grid itemconfigure $cellCache($x_,$y_) -fill white
             }
-            update
+            #update
         }
 
         # rule engine
@@ -170,7 +169,9 @@ proc update_ {x y} {
     } else {
         .grid itemconfigure "x:$x;y:$y" -fill white
     }
-    update
+    #update
+    
+    
 }
 
 proc main {} {
@@ -186,7 +187,7 @@ proc main {} {
         set currentState($x,$y) 1 
         .grid itemconfigure $cellCache($x,$y) -fill red
     }
-    update
+    #update
 
     puts init    
 
@@ -196,23 +197,48 @@ proc main {} {
     set currentState(2,1) 1
     set currentState(2,2) 1
  
-    # enter the game loop
-    while {1} {
-        for {set i 0} {$i < $gridSize} {incr i} {
-            for {set j 0} {$j < $gridSize} {incr j} {
-                moore $i $j
-            }
-        }
- 
-        wm title . "Game-of-Life: generation $generation"
-        incr generation
+    after 1 eventLoop
+    vwait forever
 
-        for {set i 0} {$i < $gridSize} {incr i} {
-            for {set j 0} {$j < $gridSize} {incr j} {
-                update_ $i $j
-            }
+#    # enter the game loop
+#    while {1} {
+#        for {set i 0} {$i < $gridSize} {incr i} {
+#            for {set j 0} {$j < $gridSize} {incr j} {
+#                moore $i $j
+#            }
+#        }
+# 
+#        wm title . "Game-of-Life: generation $generation"
+#        incr generation
+#
+#        for {set i 0} {$i < $gridSize} {incr i} {
+#            for {set j 0} {$j < $gridSize} {incr j} {
+#                update_ $i $j
+#            }
+#        }
+#    }
+}
+
+proc eventLoop {} {
+
+    global gridSize generation
+
+    for {set i 0} {$i < $gridSize} {incr i} {
+        for {set j 0} {$j < $gridSize} {incr j} {
+            moore $i $j
         }
     }
+
+    wm title . "Game-of-Life: generation $generation"
+    incr generation
+
+    for {set i 0} {$i < $gridSize} {incr i} {
+        for {set j 0} {$j < $gridSize} {incr j} {
+            update_ $i $j
+        }
+    }
+
+    after 1 [list eventLoop]
 }
 
 # start
