@@ -6,7 +6,7 @@ set gridSize 100
 set cellSize 5
 
 #expr {srand(42)}
-set seed 50
+set seed 450
 
 set generation 1
 
@@ -160,7 +160,6 @@ proc update_ {x y} {
     global currentState nextState
 
     set state $currentState($x,$y)
-    
     set currentState($x,$y) $nextState($x,$y)
     set nextState($x,$y) 0
 
@@ -170,8 +169,6 @@ proc update_ {x y} {
         .grid itemconfigure "x:$x;y:$y" -fill white
     }
     #update
-    
-    
 }
 
 proc main {} {
@@ -187,17 +184,17 @@ proc main {} {
         set currentState($x,$y) 1 
         .grid itemconfigure $cellCache($x,$y) -fill red
     }
-    #update
+    update
 
     puts init    
 
-    set currentState(0,2) 1
-    set currentState(1,0) 1
-    set currentState(1,2) 1
-    set currentState(2,1) 1
-    set currentState(2,2) 1
+    #set currentState(0,2) 1
+    #set currentState(1,0) 1
+    #set currentState(1,2) 1
+    #set currentState(2,1) 1
+    #set currentState(2,2) 1
  
-    after 1 eventLoop
+    after 1 [list eventLoop]
     vwait forever
 
 #    # enter the game loop

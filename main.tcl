@@ -2,13 +2,13 @@
 
 package require Tk
 
-set gridSize 60 
-set cellSize 5 
+set gridSize 100
+set cellSize 3
 
-set gridState 0
+set mooreCache [dict create]
 
 #expr {srand(42)}
-set seed 450
+set seed 1050
 
 set generation 1
 
@@ -44,9 +44,9 @@ for {set i 0} {$i < $gridSize} {incr i} {
 proc moore {cell} {
  
     #set ne nonewline
-    
-    global gridSize frameList currentState nextState
-    
+
+    global gridSize frameList currentState nextState mooreCache
+
     lassign [split $cell -] _ x y
     
     set neighbours [list]
@@ -56,126 +56,118 @@ proc moore {cell} {
     #update
 
     set livingNeighbours 0
-    if {1} {
+    ;#if {[catch {dict get $mooreCache $cell} err]} {
         # north
         #puts -$ne "{[expr $x-1] [expr $y+0]}"
         set x_ [expr $x-1]
         set x_ [expr $x_ < 0 ? $gridSize-1 : $x_]
-        #lappend neighbours .cell-$x_-$y
+        lappend neighbours .cell-$x_-$y
         set livingNeighbours $currentState($x_,$y)
 
         # northeast
         #puts -$ne "{[expr $x-1] [expr $y+1]}"
         set y_ [expr $y+1]
         set y_ [expr $y_ > $gridSize-1 ? 0 : $y_]
-        #lappend neighbours .cell-$x_-$y_
+        lappend neighbours .cell-$x_-$y_
         set livingNeighbours [expr $livingNeighbours + $currentState($x_,$y_)]
         
         # east
         #puts -$ne "{[expr $x-0] [expr $y+1]}"
-        #lappend neighbours .cell-$x-$y_
+        lappend neighbours .cell-$x-$y_
         set livingNeighbours [expr $livingNeighbours + $currentState($x,$y_)]
         
         # southeast
         #puts -$ne "{[expr $x+1] [expr $y+1]}"
         set x_ [expr $x+1]
         set x_ [expr $x_ > $gridSize-1 ? 0 : $x_]
-        #lappend neighbours .cell-$x_-$y_
+        lappend neighbours .cell-$x_-$y_
         set livingNeighbours [expr $livingNeighbours + $currentState($x_,$y_)]
         
         # south
         #puts -$ne "{[expr $x+1] [expr $y+0]}"
-        #lappend neighbours .cell-$x_-$y
+        lappend neighbours .cell-$x_-$y
         set livingNeighbours [expr $livingNeighbours + $currentState($x_,$y)]
         
         # southwest
         #puts -$ne "{[expr $x+1] [expr $y-1]}"
         set y_ [expr $y-1]
         set y_ [expr $y_ < 0 ? $gridSize-1 : $y_]
-        #lappend neighbours .cell-$x_-$y_
+        lappend neighbours .cell-$x_-$y_
         set livingNeighbours [expr $livingNeighbours + $currentState($x_,$y_)]
         
         # west
         #puts -$ne "{[expr $x-0] [expr $y-1]}"
-        #lappend neighbours .cell-$x-$y_
+        lappend neighbours .cell-$x-$y_
         set livingNeighbours [expr $livingNeighbours + $currentState($x,$y_)]
 
         # northwest
         #puts "{[expr $x-1] [expr $y-1]}"
         set x_ [expr $x-1]
         set x_ [expr $x_ < 0 ? $gridSize-1 : $x_]
-        #lappend neighbours .cell-$x_-$y_
+        lappend neighbours .cell-$x_-$y_
         set livingNeighbours [expr $livingNeighbours + $currentState($x_,$y_)]
         
         #puts "livingNeighbours: $livingNeighbours"
+        dict set mooreCache $cell $neighbours
 
-        # count'em
-        if {0} {
-            set livingNeighbours 0
-            foreach nc $neighbours {
-           
-                lassign [split $nc -] _ x_ y_
-
-                if {$currentState($x_,$y_) == 1} {
-                    incr livingNeighbours
-                }
-            }
-            #puts "livingNeighbours (loop): $livingNeighbours"
-        }
-
-        # show sliding window
-        if {0} {
-            foreach nc $neighbours {
-                $nc configure -style Neighbour.TFrame
-            }
-            #update
-
-            foreach nc $neighbours {
-                $nc configure -style Dead.TFrame
-            }
-            #update
-        }
-
-        #puts "cell $x, $y: $cellArray($x,$y), $livingNeighbours"
+    ;#} else {
+    ;#    set neighbours [dict get $mooreCache $cell]
+    ;#    
+    ;#    foreach neighbour $neighbours {
+    ;#        lassign [split $neighbour -] _ x_ y_
+    ;#        set livingNeighbours [expr $livingNeighbours + $currentState($x_,$y_)]
+    ;#    }
+    ;#}
     
-        # rule 1:
-	    # Any live cell with two or three live neighbours survives.
+    # show sliding window
+    if {0} {
+        foreach nc $neighbours {
+            $nc configure -style Neighbour.TFrame
+        }
+        update
+        foreach nc $neighbours {
+            $nc configure -style Dead.TFrame
+        }
+        update
+    }
 
-        if {$currentState($x,$y) == 1} {
-            switch $livingNeighbours {
-                2 -
-                3 {
-                    #.cell-$x-$y configure -style Alive.TFrame
-                    set nextState($x,$y) 1
-                }
-                default {
-                    #.cell-$x-$y configure -style Dead.TFrame
-                    set nextState($x,$y) 0
-                }
-            }
-       
-       # rule 2:
-	   # Any dead cell with three live neighbours becomes a live cell.
-            
-       } else {
-            if {$livingNeighbours == 3} {
+    #puts "cell $x, $y: $cellArray($x,$y), $livingNeighbours"
+   
+    # rule 1:
+    # Any live cell with two or three live neighbours survives.
+
+    # rule 2:
+	# Any dead cell with three live neighbours becomes a live cell.
+    
+    if {$currentState($x,$y) == 1} {
+        switch $livingNeighbours {
+            2 -
+            3 {
                 #.cell-$x-$y configure -style Alive.TFrame
                 set nextState($x,$y) 1
             }
-        } 
-
-        # rule 3:
-	    # All other live cells die in the next generation. Similarly, all other dead cells stay dead.			
-            
-        #update
+            default {
+                #.cell-$x-$y configure -style Dead.TFrame
+                set nextState($x,$y) 0
+            }
+        }
+    } else {
+        if {$livingNeighbours == 3} {
+            #.cell-$x-$y configure -style Alive.TFrame
+            set nextState($x,$y) 1
+        }
     }
+
+    # rule 3:
+    # All other live cells die in the next generation. Similarly, all other dead cells stay dead.			
+            
     #.cell-$x-$y configure -style Dead.TFrame
     #update
 }
 
 proc update_ {cell} {
 
-    global currentState nextState gridState
+    global currentState nextState
 
     lassign [split $cell -] _ x y
     
@@ -192,7 +184,7 @@ proc update_ {cell} {
 
 proc main {} {
 
-    global seed gridSize frameList currentState generation gridState
+    global seed gridSize frameList currentState generation
 
     # init the grid
     if {1} {
@@ -281,6 +273,8 @@ proc main {} {
 
 proc eventLoop {} {
  
+    set tic [clock milliseconds]
+
     global frameList generation
 
     foreach l $frameList {
@@ -298,7 +292,11 @@ proc eventLoop {} {
         }
     }
 
-    after 20 [list eventLoop]
+    set toc [clock milliseconds]
+
+    puts "time spent: [expr $toc - $tic] ms"
+
+    after 1 [list eventLoop]
 }
 
 # start
