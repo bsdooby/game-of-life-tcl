@@ -23,3 +23,5 @@ for {set i 0} {$i < [expr $gridSize * $cellSize]} {incr i $cellSize} {
 # 
 .canvas itemconfigure "x:69;y:69" -fill black
 
+# EOF
+
